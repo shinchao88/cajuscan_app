@@ -1,54 +1,54 @@
-// lib/fatura_model.dart
+// lib/invoice_model.dart
 
-class Fatura {
-  // Chave A: NIF do emitente / comerciante
-  // Exemplo: A:123456789
+class Invoice {
+  // Key A: issuer / merchant tax ID.
+  // Example: A:123456789
   final String merchantNif;
 
-  // Chave B: NIF do adquirente / cliente (opcional)
-  // Exemplo: B:999999990
+  // Key B: buyer / customer tax ID (optional).
+  // Example: B:999999990
   final String clientNif;
 
-  // Chave C: País do adquirente / cliente (opcional)
-  // Exemplo: C:PT
+  // Key C: buyer / customer country (optional).
+  // Example: C:PT
   final String clientCountry;
 
-  // Chave D: Tipo de documento (ex: FT - Fatura, FS - Fatura Simplificada)
-  // Exemplo: D:FT
+  // Key D: document type (e.g. FT - invoice, FS - simplified invoice).
+  // Example: D:FT
   final String documentType;
 
-  // Chave E: Estado do documento (ex: N - Normal, C - Cancelado)
-  // Exemplo: E:N
+  // Key E: document status (e.g. N - normal, C - cancelled).
+  // Example: E:N
   final String documentStatus;
 
-  // Chave F: Data de emissão do documento
-  //Exemplo: F:20191231
+  // Key F: document issue date.
+  // Example: F:20191231
   final DateTime date;
 
-  // Chave G: Identificação única do documento
-  // Exemplo: G:FT AB2019/0035
+  // Key G: unique document ID.
+  // Example: G:FT AB2019/0035
   final String documentId;
 
-  // Chave H: ATCUD (Código único do documento)
-  // Exemplo: H:CSDF7T5H0035
+  // Key H: ATCUD (unique document code).
+  // Example: H:CSDF7T5H0035
   final String atcud;
 
-  // Chave N: Valor total de IVA e Imposto do Selo
+  // Key N: total VAT and stamp duty.
   // N:64000.02
   final double vatAmount;
 
-  // Chave O: Valor total do documento com impostos
-  // Exemplo: O:513600.58
+  // Key O: document total including taxes.
+  // Example: O:513600.58
   final double totalAmount;
 
-  // Chave Q: 4 carateres do Hash
-  // Exemplo: Q:kLp0
+  // Key Q: 4-character hash.
+  // Example: Q:kLp0
   final String docHash;
 
-  // Chave S: Outras informações
+  // Key S: other information.
   final String controlInfo;
 
-  Fatura({
+  Invoice({
     required this.merchantNif,
     required this.clientNif,
     required this.clientCountry,
@@ -63,9 +63,9 @@ class Fatura {
     required this.controlInfo,
   });
 
-  // Método copyWith mantém-se limpo, focado em atualizar o DateTime composto
-  Fatura copyWith({DateTime? date}) {
-    return Fatura(
+  // Keep copyWith focused on updating the combined DateTime value.
+  Invoice copyWith({DateTime? date}) {
+    return Invoice(
       merchantNif: merchantNif,
       clientNif: clientNif,
       clientCountry: clientCountry,
@@ -81,16 +81,16 @@ class Fatura {
     );
   }
 
-  // Método para criar uma instância de Fatura a partir de uma string de código QR
-  factory Fatura.fromQrCodeString(String qrCode) {
+  // Create an invoice from a QR code string.
+  factory Invoice.fromQrCodeString(String qrCode) {
     final Map<String, String> dataMap = {};
 
-    // O QR Code da AT separa os campos por '*'
+    // The Portuguese tax authority's QR code separates fields with '*'.
     final parts = qrCode.split('*');
     for (var part in parts) {
       final keyValue = part.split(':');
       if (keyValue.length >= 2) {
-        // Usa o primeiro elemento como chave e junta o resto (caso o valor contenha ':')
+        // Use the first element as the key and join the remainder if the value contains ':'.
         dataMap[keyValue[0]] = keyValue.sublist(1).join(':');
       }
     }
@@ -98,7 +98,7 @@ class Fatura {
     final String merchantNif = dataMap['A'] ?? 'N/A';
     final String clientNif = dataMap['B'] ?? 'N/A';
     final String clientCountry = dataMap['C'] ?? 'N/A';
-    final String documentType = dataMap['D'] ?? 'Fatura';
+    final String documentType = dataMap['D'] ?? 'Invoice';
     final String documentStatus = dataMap['E'] ?? 'N/A';
 
     final String rawDate = (dataMap['F'] ?? '').trim();
@@ -110,7 +110,7 @@ class Fatura {
       final String month = rawDate.substring(4, 6);
       final String day = rawDate.substring(6, 8);
 
-      // Reconstrói no formato ISO (AAAA-MM-DD) aceitado nativamente pelo tryParse
+      // Rebuild the ISO (YYYY-MM-DD) date accepted by tryParse.
       final DateTime? parsedDate = DateTime.tryParse('$year-$month-$day');
       if (parsedDate != null) {
         finalDate = DateTime(
@@ -134,7 +134,7 @@ class Fatura {
     final String docHash = dataMap['Q'] ?? '';
     final String controlInfo = dataMap['S'] ?? '';
 
-    return Fatura(
+    return Invoice(
       merchantNif: merchantNif,
       clientNif: clientNif,
       clientCountry: clientCountry,
@@ -152,12 +152,12 @@ class Fatura {
 
   @override
   String toString() {
-    return 'NIF: $merchantNif\n'
-        'Tipo: $documentType\n'
-        'Doc: $documentId\n'
+    return 'Tax ID: $merchantNif\n'
+        'Type: $documentType\n'
+        'Document: $documentId\n'
         'ATCUD: $atcud\n'
-        'Valor: ${totalAmount.toStringAsFixed(2)}€ (IVA: ${vatAmount.toStringAsFixed(2)}€)\n'
+        'Amount: ${totalAmount.toStringAsFixed(2)}€ (VAT: ${vatAmount.toStringAsFixed(2)}€)\n'
         'Hash: $docHash\n'
-        '${controlInfo.isNotEmpty ? "Controlo: $controlInfo" : ""}';
+        '${controlInfo.isNotEmpty ? "Control: $controlInfo" : ""}';
   }
 }

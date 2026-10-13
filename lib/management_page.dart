@@ -60,7 +60,7 @@ class _ManagementPageState extends State<ManagementPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao carregar dados: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
       }
     } finally {
       if (mounted) {
@@ -79,7 +79,7 @@ class _ManagementPageState extends State<ManagementPage> {
   }
 
   void _applyFilter() {
-    // Recolhe e ordena todos os NIFs com base no nome do comerciante
+    // Collect and sort all tax IDs by merchant name.
     final sortedNifs = _allProfiles.keys.toList()
       ..sort((a, b) => _allProfiles[a]!.name.compareTo(_allProfiles[b]!.name));
 
@@ -106,18 +106,18 @@ class _ManagementPageState extends State<ManagementPage> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar comerciante'),
+        title: const Text('Delete merchant'),
         content: const Text(
-          'Tem a certeza que deseja eliminar este perfil? Esta ação não pode ser desfeita.',
+          'Are you sure you want to delete this profile? This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -145,7 +145,7 @@ class _ManagementPageState extends State<ManagementPage> {
           builder: (context, setDialogState) {
             final subcategories = _allCategories[selectedCategory] ?? [];
             return AlertDialog(
-              title: Text('Editar "${profile.name}"'),
+              title: Text('Edit "${profile.name}"'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -153,17 +153,17 @@ class _ManagementPageState extends State<ManagementPage> {
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Nome do comerciante',
+                        labelText: 'Merchant name',
                       ),
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
                       initialValue: selectedCategory,
-                      hint: const Text('Nenhuma'),
+                      hint: const Text('None'),
                       items: [
                         const DropdownMenuItem<String>(
                           value: null,
-                          child: Text('Nenhuma'),
+                          child: Text('None'),
                         ),
                         ..._allCategories.keys.map(
                           (c) => DropdownMenuItem(value: c, child: Text(c)),
@@ -173,17 +173,17 @@ class _ManagementPageState extends State<ManagementPage> {
                         selectedCategory = val;
                         selectedSubcategory = null;
                       }),
-                      decoration: const InputDecoration(labelText: 'Categoria'),
+                      decoration: const InputDecoration(labelText: 'Category'),
                     ),
                     if (subcategories.isNotEmpty) const SizedBox(height: 20),
                     if (subcategories.isNotEmpty)
                       DropdownButtonFormField<String>(
                         initialValue: selectedSubcategory,
-                        hint: const Text('Nenhuma'),
+                        hint: const Text('None'),
                         items: [
                           const DropdownMenuItem<String>(
                             value: null,
-                            child: Text('Nenhuma'),
+                            child: Text('None'),
                           ),
                           ...subcategories.map(
                             (s) => DropdownMenuItem(value: s, child: Text(s)),
@@ -192,7 +192,7 @@ class _ManagementPageState extends State<ManagementPage> {
                         onChanged: (val) =>
                             setDialogState(() => selectedSubcategory = val),
                         decoration: const InputDecoration(
-                          labelText: 'Subcategoria',
+                          labelText: 'Subcategory',
                         ),
                       ),
                   ],
@@ -201,7 +201,7 @@ class _ManagementPageState extends State<ManagementPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -218,7 +218,7 @@ class _ManagementPageState extends State<ManagementPage> {
                       _loadData();
                     }
                   },
-                  child: const Text('Guardar'),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -241,7 +241,7 @@ class _ManagementPageState extends State<ManagementPage> {
           builder: (context, setDialogState) {
             final subcategories = _allCategories[selectedCategory] ?? [];
             return AlertDialog(
-              title: const Text('Adicionar comerciante'),
+              title: const Text('Add merchant'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -249,7 +249,7 @@ class _ManagementPageState extends State<ManagementPage> {
                     TextField(
                       controller: nifController,
                       decoration: const InputDecoration(
-                        labelText: 'NIF (9 dígitos)',
+                        labelText: 'Tax ID (9 digits)',
                         counterText: "",
                       ),
                       keyboardType: TextInputType.number,
@@ -260,17 +260,17 @@ class _ManagementPageState extends State<ManagementPage> {
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Nome do comerciante',
+                        labelText: 'Merchant name',
                       ),
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
                       initialValue: selectedCategory,
-                      hint: const Text('Categoria (opcional)'),
+                      hint: const Text('Category (optional)'),
                       items: [
                         const DropdownMenuItem<String>(
                           value: null,
-                          child: Text('Nenhuma'),
+                          child: Text('None'),
                         ),
                         ..._allCategories.keys.map(
                           (c) => DropdownMenuItem(value: c, child: Text(c)),
@@ -285,11 +285,11 @@ class _ManagementPageState extends State<ManagementPage> {
                     if (subcategories.isNotEmpty)
                       DropdownButtonFormField<String>(
                         initialValue: selectedSubcategory,
-                        hint: const Text('Subcategoria (opcional)'),
+                        hint: const Text('Subcategory (optional)'),
                         items: [
                           const DropdownMenuItem<String>(
                             value: null,
-                            child: Text('Nenhuma'),
+                            child: Text('None'),
                           ),
                           ...subcategories.map(
                             (s) => DropdownMenuItem(value: s, child: Text(s)),
@@ -304,7 +304,7 @@ class _ManagementPageState extends State<ManagementPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -314,14 +314,14 @@ class _ManagementPageState extends State<ManagementPage> {
                     if (nif.length != 9) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('O NIF deve ter 9 dígitos.'),
+                          content: Text('The tax ID must contain 9 digits.'),
                         ),
                       );
                       return;
                     }
                     if (name.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('O Nome é obrigatório.')),
+                        const SnackBar(content: Text('Name is required.')),
                       );
                       return;
                     }
@@ -329,7 +329,7 @@ class _ManagementPageState extends State<ManagementPage> {
                     if (_allProfiles.containsKey(nif)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Erro: Este NIF já existe.'),
+                          content: Text('Error: This tax ID already exists.'),
                         ),
                       );
                       return;
@@ -347,7 +347,7 @@ class _ManagementPageState extends State<ManagementPage> {
                     Navigator.of(context).pop();
                     _loadData();
                   },
-                  child: const Text('Adicionar'),
+                  child: const Text('Add'),
                 ),
               ],
             );
@@ -360,10 +360,10 @@ class _ManagementPageState extends State<ManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Comerciantes guardados')),
+      appBar: AppBar(title: const Text('Saved merchants')),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
-        tooltip: 'Adicionar comerciante',
+        tooltip: 'Add merchant',
         child: const Icon(Icons.add),
       ),
       body: _isLoading
@@ -375,7 +375,7 @@ class _ManagementPageState extends State<ManagementPage> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Pesquisar por nome, NIF ou categoria...',
+                      hintText: 'Search by name, tax ID, or category...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -396,7 +396,7 @@ class _ManagementPageState extends State<ManagementPage> {
                           child: Padding(
                             padding: EdgeInsets.all(24.0),
                             child: Text(
-                              'Nenhum comerciante encontrado.',
+                              'No merchants found.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
@@ -412,7 +412,7 @@ class _ManagementPageState extends State<ManagementPage> {
                             final nif = _filteredNifs[index];
                             final profile = _allProfiles[nif]!;
                             final subtitle =
-                                'NIF: $nif\nCategoria: ${profile.category.isEmpty ? 'N/A' : profile.category}${profile.subcategory != null ? ' > ${profile.subcategory}' : ''}';
+                                'Tax ID: $nif\nCategory: ${profile.category.isEmpty ? 'N/A' : profile.category}${profile.subcategory != null ? ' > ${profile.subcategory}' : ''}';
 
                             return Card(
                               margin: const EdgeInsets.symmetric(
@@ -436,7 +436,7 @@ class _ManagementPageState extends State<ManagementPage> {
                                         Icons.edit,
                                         color: Colors.blue,
                                       ),
-                                      tooltip: 'Editar',
+                                      tooltip: 'Edit',
                                       onPressed: () =>
                                           _showEditDialog(nif, profile),
                                     ),
@@ -445,7 +445,7 @@ class _ManagementPageState extends State<ManagementPage> {
                                         Icons.delete,
                                         color: Colors.red,
                                       ),
-                                      tooltip: 'Eliminar',
+                                      tooltip: 'Delete',
                                       onPressed: () => _deleteProfile(nif),
                                     ),
                                   ],

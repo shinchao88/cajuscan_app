@@ -1,1 +1,0 @@
-Regista faturas na aplicação Cashew lendo o código QR nas faturas portuguesas

@@ -37,7 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadSettings();
   }
 
-  // --- Carregar definições ---
+  // --- Load settings ---
   Future<void> _loadSettings() async {
     final confirmValue = await _settingsService.getConfirmOnCashew();
     final continuousValue = await _settingsService.getContinuousScan();
@@ -63,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final bool success = await _backupService.exportData();
       if (success) {
-        statusMessage = 'Exportação concluída com sucesso!';
+        statusMessage = 'Export completed successfully!';
       }
     } catch (e) {
       statusMessage = e.toString().replaceAll('Exception: ', '');
@@ -92,7 +92,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       final bool success = await _backupService.importData();
       if (success) {
-        statusMessage = 'Dados importados com sucesso!';
+        statusMessage = 'Data imported successfully!';
       }
     } catch (e) {
       statusMessage = e.toString().replaceAll('Exception: ', '');
@@ -123,9 +123,8 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     }
 
-    // Utilizador cancelou o diálogo de ficheiros
-    if (result.errorMessage == 'cancelled' ||
-        result.errorMessage == 'Nenhum ficheiro selecionado.') {
+    // The user cancelled the file picker.
+    if (result.errorMessage == 'cancelled') {
       return;
     }
 
@@ -145,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if (!hasCategories && !hasAccounts) {
       if (mounted) {
         _showSnackBar(
-          'O ficheiro não contém dados válidos para importação.',
+          'The file contains no valid data to import.',
           Colors.red,
         );
       }
@@ -154,31 +153,31 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (!mounted) return;
 
-    // Construção da mensagem informativa do diálogo
+    // Build the import summary shown in the confirmation dialog.
     final List<String> infoLines = [];
     if (hasCategories) {
-      infoLines.add('Foram encontradas ${categories.length} categorias.');
+      infoLines.add('Found ${categories.length} categories.');
     }
     if (hasAccounts) {
-      infoLines.add('Foram encontradas ${accounts.length} contas.');
+      infoLines.add('Found ${accounts.length} accounts.');
     }
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Importar dados do Cashew'),
+        title: const Text('Import data from Cashew'),
         content: Text(
           '${infoLines.join('\n')}\n\n'
-          'Isto irá substituir as configurações atuais na aplicação. Continuar?',
+          'This will replace the current app settings. Continue?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Substituir'),
+            child: const Text('Replace'),
           ),
         ],
       ),
@@ -191,23 +190,23 @@ class _SettingsPageState extends State<SettingsPage> {
 
       if (hasCategories) {
         await _categoryService.saveCategories(categories);
-        successMessages.add('${categories.length} categorias');
+        successMessages.add('${categories.length} categories');
       }
 
       if (hasAccounts) {
         await _accountService.saveAccounts(accounts);
-        successMessages.add('${accounts.length} contas');
+        successMessages.add('${accounts.length} accounts');
       }
 
       if (mounted) {
         _showSnackBar(
-          'Dados importados com sucesso: ${successMessages.join(' e ')}.',
+          'Data imported successfully: ${successMessages.join(' and ')}.',
           Colors.green,
         );
       }
     } catch (_) {
       if (mounted) {
-        _showSnackBar('Erro ao guardar os dados do Cashew.', Colors.red);
+        _showSnackBar('Error saving Cashew data.', Colors.red);
       }
     }
   }
@@ -221,16 +220,16 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Definições')),
+      appBar: AppBar(title: const Text('Settings')),
       body: _isProcessing || _isLoadingSettings
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                // --- Interruptor de definições ---
+                // --- Settings toggles ---
                 SwitchListTile(
-                  title: const Text('Confirmar no Cashew'),
+                  title: const Text('Confirm in Cashew'),
                   subtitle: const Text(
-                    'Se ativo, os dados serão abertos no Cashew para confirmação antes de serem guardados.',
+                    'When enabled, data opens in Cashew for confirmation before it is saved.',
                   ),
                   value: _confirmOnCashew,
                   onChanged: (bool value) async {
@@ -244,9 +243,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   secondary: const Icon(Icons.touch_app),
                 ),
                 SwitchListTile(
-                  title: const Text('Scan contínuo'),
+                  title: const Text('Continuous scanning'),
                   subtitle: const Text(
-                    'Permite ler várias faturas sem sair da câmara.',
+                    'Scan multiple invoices without leaving the camera.',
                   ),
                   value: _continuousScan,
                   onChanged: (bool value) async {
@@ -256,9 +255,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   secondary: const Icon(Icons.all_inclusive),
                 ),
                 SwitchListTile(
-                  title: const Text('Anexar metadados fiscais'),
+                  title: const Text('Attach tax metadata'),
                   subtitle: const Text(
-                    'Insere dados adicionais às notas da transação.',
+                    'Add extra information to transaction notes.',
                   ),
                   value: _sendFiscalInfo,
                   onChanged: (bool value) async {
@@ -270,9 +269,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.store),
-                  title: const Text('Gerir comerciantes'),
+                  title: const Text('Manage merchants'),
                   subtitle: const Text(
-                    'Ver e editar perfil de comerciantes guardados',
+                    'View and edit saved merchant profiles',
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
@@ -281,9 +280,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.category),
-                  title: const Text('Gerir categorias'),
+                  title: const Text('Manage categories'),
                   subtitle: const Text(
-                    'Adicionar, editar ou eliminar categorias e subcategorias do Cashew',
+                    'Add, edit, or delete Cashew categories and subcategories',
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
@@ -294,9 +293,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.account_balance_wallet),
-                  title: const Text('Gerir contas'),
+                  title: const Text('Manage accounts'),
                   subtitle: const Text(
-                    'Adicionar, editar ou eliminar contas de destino do Cashew',
+                    'Add, edit, or delete Cashew destination accounts',
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
@@ -308,32 +307,32 @@ class _SettingsPageState extends State<SettingsPage> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.upload_file),
-                  title: const Text('Exportar dados (Backup)'),
+                  title: const Text('Export data (backup)'),
                   subtitle: const Text(
-                    'Guarda todas os dados da aplicação num ficheiro',
+                    'Save all app data to a file',
                   ),
                   onTap: _handleExport,
                 ),
                 ListTile(
                   leading: const Icon(Icons.file_download),
-                  title: const Text('Importar dados (Restauro)'),
+                  title: const Text('Import data (restore)'),
                   subtitle: const Text(
-                    'Carrega os dados a partir de um ficheiro de backup',
+                    'Load data from a backup file',
                   ),
                   onTap: _handleImport,
                 ),
                 ListTile(
                   leading: const Icon(Icons.swap_horiz),
-                  title: const Text('Importar dados do Cashew'),
+                  title: const Text('Import data from Cashew'),
                   subtitle: const Text(
-                    'Carrega categorias e contas a partir de uma exportação do Cashew',
+                    'Load categories and accounts from a Cashew export',
                   ),
                   onTap: _isProcessing ? null : _handleCashewImport,
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('Sobre CajuScan'),
+                  title: const Text('About CajuScan'),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(

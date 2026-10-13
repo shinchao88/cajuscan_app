@@ -5,13 +5,13 @@ import 'merchant_profile.dart';
 class ProfileService {
   static const String _prefix = 'nif_';
 
-  // Guarda o perfil completo de um comerciante
+  // Save a complete merchant profile.
   Future<void> saveProfile(String nif, MerchantProfile profile) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('$_prefix$nif', profile.toJson());
   }
 
-  // Obtém o perfil de um comerciante
+  // Get a merchant profile.
   Future<MerchantProfile?> getProfile(String nif) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('$_prefix$nif');
@@ -37,7 +37,7 @@ class ProfileService {
     return profiles;
   }
 
-  // --- Eliminar um perfil ---
+  // --- Delete a profile ---
   Future<void> deleteProfile(String nif) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('$_prefix$nif');

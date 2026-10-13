@@ -3,20 +3,20 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'fatura_model.dart';
+import 'invoice_model.dart';
 import 'profile_service.dart';
 import 'cashew_launcher.dart';
 import 'merchant_profile.dart';
 import 'settings_service.dart';
 
 class ConfirmationPage extends StatefulWidget {
-  final Fatura fatura;
+  final Invoice invoice;
   final Map<String, List<String>> categories;
   final List<String> accounts;
 
   const ConfirmationPage({
     super.key,
-    required this.fatura,
+    required this.invoice,
     required this.categories,
     required this.accounts,
   });
@@ -40,16 +40,16 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
   bool _isMerchantStored = false;
   bool _sendFiscalInfo = false;
 
-  late Fatura _localFatura;
+  late Invoice _localInvoice;
 
-  // Chaves para persistência do histórico de predição
+  // Keys for persisting account usage history.
   static const String _globalHistoryKey = 'ac_global_history';
   static const String _merchantHistoryKey = 'ac_merchant_history';
 
   @override
   void initState() {
     super.initState();
-    _localFatura = widget.fatura;
+    _localInvoice = widget.invoice;
     _loadData();
   }
 
@@ -62,7 +62,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
     try {
       final loadedProfile = await _profileService.getProfile(
-        _localFatura.merchantNif,
+        _localInvoice.merchantNif,
       );
 
       final loadedCategories = widget.categories;
@@ -79,7 +79,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
           _profile =
               loadedProfile ??
-              MerchantProfile(name: 'Desconhecido', category: '');
+              MerchantProfile(name: 'Unknown', category: '');
 
           List<String> accounts = List<String>.from(loadedAccounts);
           final String globalRaw = prefs.getString(_globalHistoryKey) ?? '{}';
@@ -89,13 +89,13 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           final Map<String, dynamic> globalHistory = json.decode(globalRaw);
           final Map<String, dynamic> merchantHistory = json.decode(merchantRaw);
 
-          final String merchantId = _localFatura.merchantNif;
+          final String merchantId = _localInvoice.merchantNif;
           final Map<String, dynamic> thisMerchantHistory =
               merchantHistory[merchantId] ?? {};
 
           String? prediction;
 
-          // Regra 1: Mais utilizada para este comerciante específico
+          // Rule 1: Prefer the most-used account for this merchant.
           if (thisMerchantHistory.isNotEmpty) {
             prediction = thisMerchantHistory.entries
                 .reduce((a, b) => (a.value as int) > (b.value as int) ? a : b)
@@ -109,12 +109,12 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                 .key;
           }
 
-          // Regra 3: Primeira da lista (Fallback final)
+          // Rule 3: Use the first account as the final fallback.
           if (prediction == null || !accounts.contains(prediction)) {
             prediction = accounts.isNotEmpty ? accounts.first : null;
           }
 
-          // Ordenação da lista: coloca as mais usadas globalmente no topo
+          // Sort the list with the most-used accounts first.
           accounts.sort((a, b) {
             final int countA = globalHistory[a] ?? 0;
             final int countB = globalHistory[b] ?? 0;
@@ -130,7 +130,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao carregar dados: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
       }
     } finally {
       if (mounted) {
@@ -141,12 +141,12 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     }
   }
 
-  /// Regista a utilização da conta para refinar as futuras sugestões
+  /// Record account usage to improve future suggestions.
   Future<void> _incrementAccountUsage(String account) async {
     final prefs = await SharedPreferences.getInstance();
-    final String merchantId = _localFatura.merchantNif;
+    final String merchantId = _localInvoice.merchantNif;
 
-    // Atualiza o histórico global
+    // Update the global history.
     final String globalRaw = prefs.getString(_globalHistoryKey) ?? '{}';
     final Map<String, dynamic> globalHistory = Map<String, dynamic>.from(
       json.decode(globalRaw),
@@ -154,7 +154,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     globalHistory[account] = (globalHistory[account] ?? 0) + 1;
     await prefs.setString(_globalHistoryKey, json.encode(globalHistory));
 
-    // Atualiza o histórico por comerciante
+    // Update the history for this merchant.
     final String merchantRaw = prefs.getString(_merchantHistoryKey) ?? '{}';
     final Map<String, dynamic> merchantHistory = Map<String, dynamic>.from(
       json.decode(merchantRaw),
@@ -172,9 +172,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     await prefs.setString(_merchantHistoryKey, json.encode(merchantHistory));
   }
 
-  /// Despoleta a janela nativa para alteração da componente temporal
+  /// Open the native time picker.
   Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay currentTime = TimeOfDay.fromDateTime(_localFatura.date);
+    final TimeOfDay currentTime = TimeOfDay.fromDateTime(_localInvoice.date);
 
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -183,11 +183,11 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
     if (picked != null && picked != currentTime) {
       setState(() {
-        _localFatura = _localFatura.copyWith(
+        _localInvoice = _localInvoice.copyWith(
           date: DateTime(
-            _localFatura.date.year,
-            _localFatura.date.month,
-            _localFatura.date.day,
+            _localInvoice.date.year,
+            _localInvoice.date.month,
+            _localInvoice.date.day,
             picked.hour,
             picked.minute,
           ),
@@ -205,17 +205,17 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     });
 
     try {
-      // Guarda a utilização da conta para inteligência futura antes de lançar o Cashew
+      // Record account usage before opening Cashew.
       if (_selectedAccount != null) {
         await _incrementAccountUsage(_selectedAccount!);
       }
 
-      // Guarda o perfil atualizado
-      await _profileService.saveProfile(_localFatura.merchantNif, _profile!);
+      // Save the updated profile.
+      await _profileService.saveProfile(_localInvoice.merchantNif, _profile!);
 
-      // Enviamos apenas a fatura local totalmente atualizada
+      // Send the fully updated invoice.
       await _cashewLauncher.launchCashew(
-        fatura: _localFatura,
+        invoice: _localInvoice,
         category: _profile!.category,
         subcategory: _profile!.subcategory,
         account: _selectedAccount,
@@ -227,7 +227,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) {
@@ -241,13 +241,13 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
   Future<void> _saveProfileOnly() async {
     if (_profile == null) return;
 
-    // Validar se o utilizador está a tentar guardar com o nome padrão "Desconhecido"
-    if (_profile!.name.trim() == 'Desconhecido' ||
+    // Ensure the merchant has a name before saving the profile.
+    if (_profile!.name.trim() == 'Unknown' ||
         _profile!.name.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Por favor, defina o nome do comerciante antes de guardar.',
+            'Enter a merchant name before saving.',
           ),
           backgroundColor: Colors.orange,
         ),
@@ -259,7 +259,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       _isProcessing = true;
     });
     try {
-      await _profileService.saveProfile(_localFatura.merchantNif, _profile!);
+      await _profileService.saveProfile(_localInvoice.merchantNif, _profile!);
       if (mounted) {
         setState(() {
           _isMerchantStored = true;
@@ -267,7 +267,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Comerciante "${_profile!.name}" guardado com sucesso!',
+              'Merchant "${_profile!.name}" saved successfully!',
             ),
             backgroundColor: Colors.green,
           ),
@@ -277,7 +277,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao guardar perfil: ${e.toString()}')),
+          SnackBar(content: Text('Error saving profile: ${e.toString()}')),
         );
       }
     } finally {
@@ -289,24 +289,24 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     }
   }
 
-  /// Abre diálogo simples e focado para editar apenas o nome do comerciante
+  /// Show a simple dialog for editing the merchant name.
   void _showEditMerchantNameDialog() {
     if (_profile == null) return;
 
     final localNameController = TextEditingController(
-      text: _profile!.name == 'Desconhecido' ? '' : _profile!.name,
+      text: _profile!.name == 'Unknown' ? '' : _profile!.name,
     );
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Nome do comerciante'),
+          title: const Text('Merchant name'),
           content: TextField(
             controller: localNameController,
             decoration: const InputDecoration(
-              labelText: 'Nome do estabelecimento',
-              hintText: 'Ex: Continente, Pingo Doce',
+              labelText: 'Business name',
+              hintText: 'e.g. Whole Foods, Target',
             ),
             autofocus: true,
             textCapitalization: TextCapitalization.words,
@@ -314,7 +314,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -329,7 +329,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Confirmar'),
+              child: const Text('Confirm'),
             ),
           ],
         );
@@ -337,7 +337,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     );
   }
 
-  /// Desenrola o painel inferior para seleção rápida da categoria e subcategoria
+  /// Show the category and subcategory picker.
   void _showCategoryBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -374,7 +374,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                         vertical: 4,
                       ),
                       child: Text(
-                        'Selecionar categoria',
+                        'Select category',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -387,7 +387,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                           ? const Padding(
                               padding: EdgeInsets.all(20.0),
                               child: Text(
-                                'Nenhuma categoria disponível. Configure no Cashew.',
+                                'No categories available. Set them up in Cashew.',
                               ),
                             )
                           : ListView.builder(
@@ -428,8 +428,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                                     onTap: () {
                                       setState(() {
                                         _profile = MerchantProfile(
-                                          name:
-                                              _profile?.name ?? 'Desconhecido',
+                                          name: _profile?.name ?? 'Unknown',
                                           category: category,
                                           subcategory: null,
                                         );
@@ -495,9 +494,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                                       onTap: () {
                                         setState(() {
                                           _profile = MerchantProfile(
-                                            name:
-                                                _profile?.name ??
-                                                'Desconhecido',
+                                            name: _profile?.name ?? 'Unknown',
                                             category: category,
                                             subcategory: sub,
                                           );
@@ -520,7 +517,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     );
   }
 
-  /// Desenrola o painel inferior para seleção rápida da conta
+  /// Show the account picker.
   void _showAccountBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -547,7 +544,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   child: Text(
-                    'Selecionar conta de destino',
+                    'Select destination account',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -557,7 +554,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       ? const Padding(
                           padding: EdgeInsets.all(20.0),
                           child: Text(
-                            'Nenhuma conta disponível. Configure no Cashew.',
+                            'No accounts available. Set them up in Cashew.',
                           ),
                         )
                       : ListView.builder(
@@ -602,7 +599,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                                                   BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              'Sugerida',
+                                              'Suggested',
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 color: Colors.orange[800],
@@ -667,7 +664,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                 _allCategories[dialogSelectedCategory] ?? [];
 
             return AlertDialog(
-              title: const Text('Editar comerciante'),
+              title: const Text('Edit merchant'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -676,19 +673,19 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                     TextField(
                       controller: localNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Nome do comerciante',
+                        labelText: 'Merchant name',
                       ),
                       autofocus: true,
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
                       initialValue: dialogSelectedCategory,
-                      hint: const Text('Nenhuma (Selecionar no Cashew)'),
+                      hint: const Text('None (select in Cashew)'),
                       isExpanded: true,
                       items: [
                         const DropdownMenuItem<String>(
                           value: null,
-                          child: Text('Nenhuma (Selecionar no Cashew)'),
+                          child: Text('None (select in Cashew)'),
                         ),
                         ..._allCategories.keys.map(
                           (cat) =>
@@ -701,19 +698,19 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                           dialogSelectedSubcategory = null;
                         });
                       },
-                      decoration: const InputDecoration(labelText: 'Categoria'),
+                      decoration: const InputDecoration(labelText: 'Category'),
                     ),
                     const SizedBox(height: 20),
                     if (dialogSelectedCategory != null &&
                         availableSubcategories.isNotEmpty) ...[
                       DropdownButtonFormField<String>(
                         initialValue: dialogSelectedSubcategory,
-                        hint: const Text('Nenhuma'),
+                        hint: const Text('None'),
                         isExpanded: true,
                         items: [
                           const DropdownMenuItem<String>(
                             value: null,
-                            child: Text('Nenhuma'),
+                            child: Text('None'),
                           ),
                           ...availableSubcategories.map(
                             (sub) =>
@@ -726,19 +723,19 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                           });
                         },
                         decoration: const InputDecoration(
-                          labelText: 'Subcategoria',
+                          labelText: 'Subcategory',
                         ),
                       ),
                       const SizedBox(height: 20),
                     ],
                     DropdownButtonFormField<String>(
                       initialValue: dialogSelectedAccount,
-                      hint: const Text('Nenhuma (Selecionar no Cashew)'),
+                      hint: const Text('None (select in Cashew)'),
                       isExpanded: true,
                       items: [
                         const DropdownMenuItem<String>(
                           value: null,
-                          child: Text('Nenhuma (Selecionar no Cashew)'),
+                          child: Text('None (select in Cashew)'),
                         ),
                         ..._allAccounts.map(
                           (acc) =>
@@ -751,7 +748,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                         });
                       },
                       decoration: const InputDecoration(
-                        labelText: 'Conta de destino',
+                        labelText: 'Destination account',
                         prefixIcon: Icon(
                           Icons.account_balance_wallet_outlined,
                           size: 20,
@@ -764,7 +761,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -780,7 +777,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       Navigator.of(context).pop();
                     }
                   },
-                  child: const Text('Confirmar alterações'),
+                  child: const Text('Save changes'),
                 ),
               ],
             );
@@ -792,19 +789,20 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final String dataTexto =
-        "${_localFatura.date.day.toString().padLeft(2, '0')}/${_localFatura.date.month.toString().padLeft(2, '0')}/${_localFatura.date.year}";
+    final String dateText =
+        "${_localInvoice.date.month.toString().padLeft(2, '0')}/${_localInvoice.date.day.toString().padLeft(2, '0')}/${_localInvoice.date.year}";
 
-    final String horaTexto =
-        "${_localFatura.date.hour.toString().padLeft(2, '0')}:${_localFatura.date.minute.toString().padLeft(2, '0')}";
+    final String timeText = TimeOfDay.fromDateTime(
+      _localInvoice.date,
+    ).format(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Confirmar despesa'),
+        title: const Text('Confirm expense'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            tooltip: 'Editar perfil',
+            tooltip: 'Edit profile',
             onPressed: _isLoading ? null : _showEditDialog,
           ),
         ],
@@ -823,13 +821,13 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       child: ListTile(
                         leading: const Icon(Icons.store, size: 40),
                         title: Text(
-                          _profile?.name ?? 'Carregando...',
+                          _profile?.name ?? 'Loading...',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
                         ),
-                        subtitle: Text('NIF: ${_localFatura.merchantNif}'),
+                        subtitle: Text('Tax ID: ${_localInvoice.merchantNif}'),
                         trailing: const Icon(
                           Icons.edit,
                           size: 18,
@@ -844,9 +842,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       borderRadius: BorderRadius.circular(12),
                       child: ListTile(
                         leading: const Icon(Icons.calendar_month, size: 40),
-                        title: const Text('Data e hora da fatura'),
+                        title: const Text('Invoice date and time'),
                         subtitle: Text(
-                          '$dataTexto às $horaTexto',
+                          '$dateText at $timeText',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -865,10 +863,10 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       borderRadius: BorderRadius.circular(12),
                       child: ListTile(
                         leading: const Icon(Icons.category, size: 40),
-                        title: const Text('Categoria'),
+                        title: const Text('Category'),
                         subtitle: Text(
                           _profile?.category.isEmpty ?? true
-                              ? 'Não definida'
+                              ? 'Not set'
                               : '${_profile!.category}${_profile!.subcategory != null ? ' > ${_profile!.subcategory}' : ''}',
                           style: const TextStyle(
                             fontSize: 16,
@@ -891,10 +889,10 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                           Icons.account_balance_wallet,
                           size: 40,
                         ),
-                        title: const Text('Conta de destino'),
+                        title: const Text('Destination account'),
                         subtitle: Text(
                           _selectedAccount ??
-                              'Não definida (Selecionar no Cashew)',
+                              'Not set (select in Cashew)',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -910,9 +908,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.euro, size: 40),
-                      title: const Text('Valor total'),
+                      title: const Text('Total amount'),
                       subtitle: Text(
-                        '${_localFatura.totalAmount.toStringAsFixed(2)} €',
+                        '${_localInvoice.totalAmount.toStringAsFixed(2)} €',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -925,9 +923,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       color: Colors.yellow[100],
                       child: ListTile(
                         leading: const Icon(Icons.info, size: 40),
-                        title: const Text('Notas adicionais'),
+                        title: const Text('Additional notes'),
                         subtitle: Text(
-                          _localFatura.toString(),
+                          _localInvoice.toString(),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -937,7 +935,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       ),
                     ),
                   ],
-                  // Espaço flexível para empurrar o botão para baixo
+                  // Flexible space to push the button to the bottom.
                   const Spacer(),
                   SizedBox(
                     width: double.infinity,
@@ -953,7 +951,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                               ),
                             )
                           : const Text(
-                              'Registar no Cashew',
+                              'Add to Cashew',
                               style: TextStyle(fontSize: 18),
                             ),
                       onPressed: _isProcessing ? null : _registerTransaction,
@@ -965,7 +963,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       ),
                     ),
                   ),
-                  // Botão para guardar apenas o comerciante, se ainda não estiver guardado
+                  // Allow saving the merchant without creating a transaction.
                   if (!_isMerchantStored) ...[
                     const SizedBox(height: 8),
                     SizedBox(
@@ -973,7 +971,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.save),
                         label: const Text(
-                          'Apenas guardar comerciante',
+                          'Save merchant only',
                           style: TextStyle(fontSize: 18),
                         ),
                         onPressed: _isProcessing ? null : _saveProfileOnly,
@@ -993,7 +991,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       ),
                     ),
                   ],
-                  // Espaço extra para evitar que o botão fique muito próximo da parte inferior da tela
+                  // Add space between the button and the bottom edge.
                   Padding(
                     padding: EdgeInsets.only(
                       bottom: MediaQuery.of(context).viewPadding.bottom + 12.0,

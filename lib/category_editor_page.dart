@@ -43,16 +43,16 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEditing ? 'Editar categoria' : 'Nova categoria'),
+        title: Text(isEditing ? 'Edit category' : 'New category'),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nome da categoria'),
+          decoration: const InputDecoration(labelText: 'Category name'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -60,7 +60,7 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
                 Navigator.of(context).pop(nameController.text);
               }
             },
-            child: const Text('Guardar'),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -68,7 +68,7 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
 
     if (newName != null && newName.isNotEmpty) {
       if (isEditing) {
-        // Lógica de renomear (eliminar o antigo, adicionar o novo)
+        // Rename by deleting the old category and adding the new one.
         final subcategories = _categories[categoryToEdit]!;
         await _categoryService.deleteCategory(categoryToEdit);
         await _categoryService.addCategory(newName);
@@ -87,16 +87,16 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
     final newSubcategoryName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Nova subcategoria para "$categoryName"'),
+        title: Text('New subcategory for "$categoryName"'),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nome da subcategoria'),
+          decoration: const InputDecoration(labelText: 'Subcategory name'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Adicionar'),
+            child: const Text('Add'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -104,7 +104,7 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
                 Navigator.of(context).pop(nameController.text);
               }
             },
-            child: const Text('Adicionar'),
+            child: const Text('Add'),
           ),
         ],
       ),
@@ -120,18 +120,18 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar'),
+        title: const Text('Confirm'),
         content: Text(
-          'Tem a certeza que quer eliminar a categoria "$categoryName" e todas as suas subcategorias?',
+          'Are you sure you want to delete the "$categoryName" category and all its subcategories?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Não'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sim, eliminar'),
+            child: const Text('Yes, delete'),
           ),
         ],
       ),
@@ -154,18 +154,18 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restaurar categorias'),
+        title: const Text('Restore categories'),
         content: const Text(
-          'Isto irá substituir a sua lista de categorias atual pela lista padrão. Deseja continuar?',
+          'This will replace your current category list with the default list. Do you want to continue?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Restaurar'),
+            child: const Text('Restore'),
           ),
         ],
       ),
@@ -182,27 +182,27 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar tudo?'),
+        title: const Text('Delete everything?'),
         content: const Text(
-          'Esta ação é irreversível e irá eliminar todas as categorias e subcategorias. Tem a certeza absoluta?',
+          'This action cannot be undone and will delete all categories and subcategories. Are you sure?',
           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Sim, eliminar tudo'),
+            child: const Text('Yes, delete everything'),
           ),
         ],
       ),
     );
 
     if (confirm ?? false) {
-      await _categoryService.saveCategories({}); // Guarda um mapa vazio
+      await _categoryService.saveCategories({}); // Save an empty map.
       _loadCategories();
     }
   }
@@ -213,32 +213,32 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gerir categorias'),
+        title: const Text('Manage categories'),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_sweep_outlined),
-            tooltip: 'Eliminar tudo',
+            tooltip: 'Delete everything',
             onPressed: _isLoading || _categories.isEmpty
                 ? null
                 : _deleteAllCategories,
           ),
           IconButton(
             icon: const Icon(Icons.restore),
-            tooltip: 'Restaurar padrão',
+            tooltip: 'Restore defaults',
             onPressed: _isLoading ? null : _restoreDefaultCategories,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(),
-        tooltip: 'Nova categoria',
+        tooltip: 'New category',
         child: const Icon(Icons.add),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _categories.isEmpty
-          // Já não precisa do botão de restauro aqui, pois está na AppBar.
-          ? const Center(child: Text('A sua lista de categorias está vazia.'))
+          // The restore button is in the app bar.
+          ? const Center(child: Text('Your category list is empty.'))
           : ListView.builder(
               padding: const EdgeInsets.only(bottom: 120.0),
               itemCount: categoryKeys.length,
@@ -257,13 +257,13 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
-                        tooltip: 'Renomear',
+                        tooltip: 'Rename',
                         onPressed: () =>
                             _showAddDialog(categoryToEdit: category),
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        tooltip: 'Eliminar',
+                        tooltip: 'Delete',
                         onPressed: () => _deleteCategory(category),
                       ),
                     ],
@@ -284,7 +284,7 @@ class _CategoryEditorPageState extends State<CategoryEditorPage> {
                       ),
                     ),
                     ListTile(
-                      title: const Text('Adicionar subcategoria...'),
+                      title: const Text('Add subcategory...'),
                       leading: const Icon(Icons.add, color: Colors.green),
                       onTap: () => _showAddSubcategoryDialog(category),
                     ),

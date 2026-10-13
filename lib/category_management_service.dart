@@ -6,39 +6,39 @@ class CategoryManagementService {
   static const String _categoriesKey = 'cashew_categories';
   static const String _accountsKey = 'cashew_accounts';
 
-  // Carrega os padrões automaticamente na primeira execução.
+  // Load defaults automatically on first launch.
   Future<Map<String, List<String>>> getCategories() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_categoriesKey);
 
     if (jsonString != null) {
-      // Se já existem dados, descodifica e retorna.
+      // Decode and return existing data.
       final Map<String, dynamic> decodedMap = json.decode(jsonString);
       return decodedMap.map(
         (key, value) => MapEntry(key, List<String>.from(value)),
       );
     } else {
-      // --- Primeira execução ---
-      // Se não há dados, carrega os padrões, guarda-os e retorna-os.
+      // --- First launch ---
+      // Load and save the defaults when no data exists.
       final defaultCategories = getDefaultCategories();
       await saveCategories(defaultCategories);
       return defaultCategories;
     }
   }
 
-  // Função que define as categorias padrão.
+  // Return the default categories.
   Map<String, List<String>> getDefaultCategories() {
     return {
-      'Alimentação': [
-        'Almoço',
-        'Jantar',
-        'Café',
-        'Água',
-        'Lanche',
+      'Food': [
+        'Lunch',
+        'Dinner',
+        'Coffee',
+        'Water',
+        'Snacks',
         'Delivery',
         'Takeaway',
       ],
-      'Compras': [
+      'Shopping': [
         'Amazon',
         'Continente',
         'Lidl',
@@ -50,41 +50,41 @@ class CategoryManagementService {
         'Fnac',
         'Worten',
       ],
-      'Casa': [
-        'Renda',
-        'Condomínio',
-        'Manutenção',
-        'Limpeza',
-        'Móveis',
-        'Decoração',
-        'Reparações',
+      'Home': [
+        'Rent',
+        'Condo fees',
+        'Maintenance',
+        'Cleaning',
+        'Furniture',
+        'Decor',
+        'Repairs',
       ],
-      'Energia': ['Eletricidade', 'Gás', 'Água'],
-      'Comunicações': ['Telemóvel', 'Nuvem', 'Internet', 'TV'],
-      'Lazer': [
+      'Utilities': ['Electricity', 'Gas', 'Water'],
+      'Communications': ['Mobile phone', 'Cloud', 'Internet', 'TV'],
+      'Entertainment': [
         'Cinema',
-        'Teatro',
-        'Concertos',
-        'Parques',
-        'Viagens',
-        'Hotéis',
+        'Theater',
+        'Concerts',
+        'Parks',
+        'Travel',
+        'Hotels',
       ],
-      'Educação': ['Livros', 'Cursos', 'Escola', 'Universidade'],
-      'Roupas': ['Casual', 'Formal', 'Desporto', 'Calçado', 'Acessórios'],
-      'Beleza': ['Cabeleireiro', 'Estética', 'Cosméticos'],
-      'Animais': ['Ração', 'Veterinário', 'Acessórios'],
-      'Filhos': ['Fraldas', 'Brinquedos', 'Roupas', 'Educação'],
-      'Impostos': ['IRS', 'IMI', 'IVA', 'Outros'],
-      'Saúde': ['Farmácia', 'Dentista', 'Lentes'],
-      'Transporte': [
-        'Combustível',
-        'Portagens',
-        'Manutenção',
-        'Estacionamento',
-        'Seguro',
-        'Impostos',
+      'Education': ['Books', 'Courses', 'School', 'University'],
+      'Clothing': ['Casual', 'Formal', 'Sports', 'Shoes', 'Accessories'],
+      'Beauty': ['Hairdresser', 'Beauty care', 'Cosmetics'],
+      'Pets': ['Pet food', 'Veterinarian', 'Accessories'],
+      'Children': ['Diapers', 'Toys', 'Clothing', 'Education'],
+      'Taxes': ['Income tax', 'Property tax', 'VAT', 'Other'],
+      'Health': ['Pharmacy', 'Dentist', 'Glasses'],
+      'Transportation': [
+        'Fuel',
+        'Tolls',
+        'Maintenance',
+        'Parking',
+        'Insurance',
+        'Taxes',
       ],
-      'Outros': [],
+      'Other': [],
     };
   }
 

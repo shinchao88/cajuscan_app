@@ -15,10 +15,10 @@ class BackupService {
       CategoryManagementService();
   final AccountManagementService _accountService = AccountManagementService();
 
-  // --- Exportação ---
+  // --- Export ---
   Future<bool> exportData() async {
     try {
-      // Recolher todos os dados
+      // Collect all data.
       final profiles = await _profileService.getAllProfiles();
       final categories = await _categoryService.getCategories();
       final accounts = await _accountService.getAccounts();
@@ -35,7 +35,7 @@ class BackupService {
       final jsonString = json.encode(backupData);
       final Uint8List bytes = utf8.encode(jsonString);
 
-      // Gerar o nome do ficheiro com base no timestamp
+      // Generate a filename from the timestamp.
       final year = now.year;
       final month = now.month.toString().padLeft(2, '0');
       final day = now.day.toString().padLeft(2, '0');
@@ -46,7 +46,7 @@ class BackupService {
       final dynamicFileName =
           'cajuscan-$year-$month-$day-$hour-$minute-$second.json';
 
-      // Usar o flutter_file_dialog para guardar o ficheiro
+      // Use flutter_file_dialog to save the file.
       final params = SaveFileDialogParams(
         data: bytes,
         fileName: dynamicFileName,
@@ -55,11 +55,11 @@ class BackupService {
       final filePath = await FlutterFileDialog.saveFile(params: params);
       return filePath != null;
     } catch (e) {
-      throw Exception('Erro ao exportar dados: $e');
+      throw Exception('Error exporting data: $e');
     }
   }
 
-  // --- Importação ---
+  // --- Import ---
   Future<bool> importData() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -80,16 +80,16 @@ class BackupService {
       final accountsData = backupData['accounts'] as List<dynamic>?;
 
       if (profilesData == null || categoriesData == null) {
-        throw Exception('Ficheiro de backup inválido ou corrompido.');
+        throw Exception('Backup file is invalid or corrupted.');
       }
 
-      // Restaura as categorias
+      // Restore categories.
       final categoriesToSave = categoriesData.map(
         (key, value) => MapEntry(key, List<String>.from(value)),
       );
       await _categoryService.saveCategories(categoriesToSave);
 
-      // Restaura os perfis dos comerciantes
+      // Restore merchant profiles.
       for (final entry in profilesData.entries) {
         final nif = entry.key;
         final profileMap = entry.value as Map<String, dynamic>;
@@ -97,7 +97,7 @@ class BackupService {
         await _profileService.saveProfile(nif, profile);
       }
 
-      // Restaura as contas (com verificação para retrocompatibilidade de backups antigos)
+      // Restore accounts, including support for older backups.
       if (accountsData != null) {
         final List<String> accountsToSave = accountsData
             .map((e) => e.toString())
@@ -107,7 +107,7 @@ class BackupService {
 
       return true;
     } catch (e) {
-      throw Exception('Erro ao importar dados: $e');
+      throw Exception('Error importing data: $e');
     }
   }
 }

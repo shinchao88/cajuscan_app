@@ -34,7 +34,7 @@ android {
     }
 
     // Reproduciblity
-    // Remove ficheiros que variam entre builds e quebram o hash SHA-256
+    // Remove files that vary between builds and break the SHA-256 hash.
     packaging {
         resources {
             excludes += "assets/dexopt/*"
@@ -50,7 +50,7 @@ android {
     }
 
     signingConfigs {
-        // Configuração de assinatura dinâmica
+        // Configure signing dynamically.
         create("release") {
             if (hasKeyProperties) {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
@@ -63,21 +63,21 @@ android {
 
     buildTypes {
         getByName("release") {
-            // Só tenta assinar se as propriedades existirem, caso contrário usa debug
+            // Use release signing only when properties exist; otherwise use debug signing.
             signingConfig = if (hasKeyProperties) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
             
-            // Otimização e conformidade FOSS:
-            // activa R8/Proguard para remover código e recursos não utilizados (como o Play Core),
-            // reduzindo o tamanho do APK e garantindo que bibliotecas bloqueadas sejam expurgadas.
+            // Optimize the app and maintain FOSS compliance:
+            // Enable R8/ProGuard to remove unused code and resources (such as Play Core),
+            // reducing APK size and excluding blocked libraries.
             isMinifyEnabled = true 
             isShrinkResources = true
             
             // Regras de Proguard:
-            // Define as regras de otimização padrão da Google e regras personalizadas do projeto.
+            // Use Google's default optimization rules and the project's custom rules.
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -92,7 +92,7 @@ android {
 }
 
 // Foss compliance
-// Bloqueia dependências proprietárias transitivas da Google
+// Block proprietary transitive Google dependencies.
 configurations.all {
     resolutionStrategy {
         force("dev.flutter:empty:1.0")
@@ -105,7 +105,7 @@ configurations.all {
 }
 
 // Deterministic Build
-// Desativa tarefas que geram perfis binários inconsistentes (corrige classes.dex)
+// Disable tasks that generate inconsistent binary profiles (fixes classes.dex).
 tasks.withType<org.gradle.api.Task>().configureEach {
     if (name.contains("ArtProfile", ignoreCase = true)) {
         enabled = false

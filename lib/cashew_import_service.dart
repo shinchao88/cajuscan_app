@@ -32,14 +32,14 @@ class CashewImportService {
       if (kIsWeb) {
         if (file.bytes == null) {
           return const CashewImportResult(
-            errorMessage: 'Não foi possível ler os dados do ficheiro na Web.',
+            errorMessage: 'Could not read the file data on the web.',
           );
         }
         jsonString = utf8.decode(file.bytes!);
       } else {
         if (file.path == null) {
           return const CashewImportResult(
-            errorMessage: 'Caminho do ficheiro inválido.',
+            errorMessage: 'Invalid file path.',
           );
         }
         final ioFile = File(file.path!);
@@ -49,7 +49,7 @@ class CashewImportService {
       return parseJson(jsonString);
     } catch (e) {
       return CashewImportResult(
-        errorMessage: 'Erro ao selecionar o ficheiro: $e',
+        errorMessage: 'Error selecting file: $e',
       );
     }
   }
@@ -59,14 +59,14 @@ class CashewImportService {
       final data = json.decode(jsonString);
       if (data is! Map<String, dynamic>) {
         return const CashewImportResult(
-          errorMessage: 'Formato JSON inválido. Deve ser um objeto.',
+          errorMessage: 'Invalid JSON format. Expected an object.',
         );
       }
 
       Map<String, List<String>>? importedCategories;
       List<String>? importedAccounts;
 
-      // Parse das categorias
+      // Parse categories.
       if (data.containsKey('categories')) {
         final rawCategories = data['categories'];
         if (rawCategories is Map<String, dynamic> && rawCategories.isNotEmpty) {
@@ -91,7 +91,7 @@ class CashewImportService {
         }
       }
 
-      // Parse das contas
+      // Parse accounts.
       if (data.containsKey('accounts')) {
         final rawAccounts = data['accounts'];
         if (rawAccounts is List) {
@@ -109,7 +109,7 @@ class CashewImportService {
       if (importedCategories == null && importedAccounts == null) {
         return const CashewImportResult(
           errorMessage:
-              'O ficheiro não contém chaves de categorias ou contas válidas com dados do Cashew.',
+              'The file does not contain valid category or account data from Cashew.',
         );
       }
 
@@ -119,7 +119,7 @@ class CashewImportService {
       );
     } catch (e) {
       return CashewImportResult(
-        errorMessage: 'Erro ao processar a estrutura do JSON: $e',
+        errorMessage: 'Error processing the JSON structure: $e',
       );
     }
   }

@@ -34,7 +34,7 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao carregar contas: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error loading accounts: $e')));
       }
     }
   }
@@ -48,7 +48,7 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao guardar alterações: $e')),
+          SnackBar(content: Text('Error saving changes: $e')),
         );
       }
     }
@@ -62,12 +62,12 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(isEditing ? 'Editar conta' : 'Nova conta'),
+          title: Text(isEditing ? 'Edit account' : 'New account'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              labelText: 'Nome da conta',
-              hintText: 'Ex: Carteira, Banco, Ativos',
+              labelText: 'Account name',
+              hintText: 'e.g. Wallet, Bank, Assets',
             ),
             autofocus: true,
             textCapitalization: TextCapitalization.sentences,
@@ -75,7 +75,7 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -88,7 +88,7 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
                 } else {
                   if (updatedList.contains(newName)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Esta conta já existe.')),
+                      const SnackBar(content: Text('This account already exists.')),
                     );
                     return;
                   }
@@ -98,7 +98,7 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
                 _saveAccountsList(updatedList);
                 Navigator.of(context).pop();
               },
-              child: const Text('Guardar'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -112,14 +112,14 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Eliminar conta'),
+          title: const Text('Delete account'),
           content: Text(
-            'Tem a certeza que pretende eliminar a conta "$accountName"?',
+            'Are you sure you want to delete the account "$accountName"?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -129,7 +129,7 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
                 Navigator.of(context).pop();
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Eliminar'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -140,13 +140,13 @@ class _AccountEditorPageState extends State<AccountEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gerir contas')),
+      appBar: AppBar(title: const Text('Manage accounts')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _accounts.isEmpty
           ? const Center(
               child: Text(
-                'Nenhuma conta criada.\nImporte do Cashew ou toque em "+".',
+                'No accounts created.\nImport from Cashew or tap "+".',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey, fontSize: 16),
               ),

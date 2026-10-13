@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AccountManagementService {
   static const String _accountsKey = 'cashew_accounts';
 
-  // Recupera todas as contas guardadas
+  // Load all saved accounts.
   Future<List<String>> getAccounts() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -13,24 +13,24 @@ class AccountManagementService {
       return stringList;
     }
 
-    // Se for a primeira execução e não houver dados, inicializa com contas padrão
+    // Initialize the default accounts on first launch.
     final defaultAccounts = getDefaultAccounts();
     await saveAccounts(defaultAccounts);
     return defaultAccounts;
   }
 
-  // Garante que este método está aqui dentro da classe
+  // Return the default accounts.
   List<String> getDefaultAccounts() {
-    return ['Carteira', 'Conta Cartão', 'Revolut'];
+    return ['Wallet', 'Credit Card', 'Revolut'];
   }
 
-  // Grava a lista completa de contas usando o método nativo otimizado
+  // Save the full account list.
   Future<void> saveAccounts(List<String> accounts) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_accountsKey, accounts);
   }
 
-  // Adiciona uma nova conta (evitando duplicados)
+  // Add an account if it does not already exist.
   Future<void> addAccount(String accountName) async {
     final accounts = await getAccounts();
     if (!accounts.contains(accountName)) {
@@ -39,14 +39,14 @@ class AccountManagementService {
     }
   }
 
-  // Elimina uma conta
+  // Delete an account.
   Future<void> deleteAccount(String accountName) async {
     final accounts = await getAccounts();
     accounts.remove(accountName);
     await saveAccounts(accounts);
   }
 
-  // Edita/Renomeia uma conta
+  // Edit or rename an account.
   Future<void> updateAccount(String oldName, String newName) async {
     final accounts = await getAccounts();
     final index = accounts.indexOf(oldName);

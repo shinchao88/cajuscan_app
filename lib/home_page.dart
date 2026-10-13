@@ -8,7 +8,7 @@ import 'scanner_page.dart';
 import 'settings_page.dart';
 import 'file_scanner_service.dart';
 import 'confirmation_page.dart';
-import 'fatura_model.dart';
+import 'invoice_model.dart';
 import 'category_management_service.dart';
 import 'account_management_service.dart';
 
@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _initSharingIntent() {
-    // App aberta através de um share enquanto já estava em background
+    // The app was opened from a share while running in the background.
     _intentSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
       (List<SharedMediaFile> files) {
         if (files.isNotEmpty) {
@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
       },
     );
 
-    // App lançada directamente pelo share (cold start)
+    // The app was launched directly from a share (cold start).
     ReceiveSharingIntent.instance.getInitialMedia().then((
       List<SharedMediaFile> files,
     ) {
@@ -68,13 +68,13 @@ class _HomePageState extends State<HomePage> {
         final f = await _readFile(file.path);
         jsonString = f;
       } catch (_) {
-        _showError('Não foi possível ler o ficheiro partilhado.');
+        _showError('Could not read the shared file.');
         return;
       }
     }
 
     if (jsonString == null || jsonString.isEmpty) {
-      _showError('Conteúdo partilhado vazio ou inválido.');
+      _showError('Shared content is empty or invalid.');
       return;
     }
 
@@ -82,11 +82,11 @@ class _HomePageState extends State<HomePage> {
     try {
       data = json.decode(jsonString) as Map<String, dynamic>;
     } catch (_) {
-      _showError('O conteúdo partilhado não é um JSON válido.');
+      _showError('The shared content is not valid JSON.');
       return;
     }
 
-    // Verifica se o JSON contém alguma das chaves esperadas do Cashew
+    // Check whether the JSON contains any of the keys expected by Cashew.
     if (!data.containsKey('categories') && !data.containsKey('accounts')) {
       return;
     }
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (categories.isEmpty && accounts.isEmpty) {
-      _showError('O ficheiro não contém categorias nem contas válidas.');
+      _showError('The file contains no valid categories or accounts.');
       return;
     }
 
@@ -123,24 +123,26 @@ class _HomePageState extends State<HomePage> {
     Map<String, List<String>> categories,
     List<String> accounts,
   ) {
-    // Constrói a mensagem informativa do diálogo baseada no que foi encontrado
+    // Build the dialog message based on the imported data.
     final List<String> infoLines = [];
-    if (categories.isNotEmpty) infoLines.add('${categories.length} categorias');
-    if (accounts.isNotEmpty) infoLines.add('${accounts.length} contas');
-    final String contentMessage = infoLines.join(' e ');
+    if (categories.isNotEmpty) {
+      infoLines.add('${categories.length} categories');
+    }
+    if (accounts.isNotEmpty) infoLines.add('${accounts.length} accounts');
+    final String contentMessage = infoLines.join(' and ');
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Importar dados'),
+        title: const Text('Import data'),
         content: Text(
-          'Foram encontradas $contentMessage.\n\n'
-          'Isto vai substituir os dados atuais pelos novos. Continuar?',
+          'Found $contentMessage.\n\n'
+          'This will replace your current data. Continue?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -154,13 +156,13 @@ class _HomePageState extends State<HomePage> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Dados importados com sucesso.'),
+                    content: Text('Data imported successfully.'),
                     backgroundColor: Colors.green,
                   ),
                 );
               }
             },
-            child: const Text('Substituir'),
+            child: const Text('Replace'),
           ),
         ],
       ),
@@ -184,7 +186,7 @@ class _HomePageState extends State<HomePage> {
     if (qrData == 'NOT_FOUND') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Não foi detetado nenhum QR Code válido no ficheiro.'),
+          content: Text('No valid QR code was found in the file.'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -192,7 +194,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     try {
-      final fatura = Fatura.fromQrCodeString(qrData);
+      final invoice = Invoice.fromQrCodeString(qrData);
       final categories = await _categoryService.getCategories();
       final accounts = await _accountService.getAccounts();
 
@@ -201,7 +203,7 @@ class _HomePageState extends State<HomePage> {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => ConfirmationPage(
-            fatura: fatura,
+            invoice: invoice,
             categories: categories,
             accounts: accounts,
           ),
@@ -210,7 +212,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Erro ao interpretar os dados da fatura.'),
+          content: Text('Error interpreting invoice data.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -231,12 +233,12 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registo de despesas'),
+        title: const Text('Expense tracker'),
         centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: 'Definições e gestão',
+            tooltip: 'Settings and management',
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SettingsPage()),
@@ -254,7 +256,7 @@ class _HomePageState extends State<HomePage> {
             children: <Widget>[
               const Spacer(),
               const Text(
-                'Selecione o método de leitura da fatura.',
+                'Choose how to scan your invoice.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -265,7 +267,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 40),
               ElevatedButton.icon(
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Digitalizar fatura'),
+                label: const Text('Scan invoice'),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -278,7 +280,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 icon: const Icon(Icons.file_present),
-                label: const Text('Importar ficheiro (PDF/Foto)'),
+                label: const Text('Import file (PDF/photo)'),
                 onPressed: () => _handleFileImport(context),
                 style: btnStyle,
               ),

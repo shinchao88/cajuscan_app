@@ -6,21 +6,21 @@ class SettingsService {
   static const String _continuousScanKey = 'continuous_scan';
   static const String _sendFiscalInfoKey = 'send_fiscal_info_to_cashew';
 
-  /// Obtém a preferência de confirmação.
-  /// Valor padrão alterado para 'true' para garantir segurança na primeira utilização.
+  /// Get the confirmation preference.
+  /// Defaults to true to ensure a safe first-time experience.
   Future<bool> getConfirmOnCashew() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_confirmOnCashewKey) ?? true;
   }
 
-  // Guarda a preferência do utilizador.
+  // Save the user's preference.
   Future<void> setConfirmOnCashew(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_confirmOnCashewKey, value);
   }
 
-  /// Obtém a preferência de Scan Contínuo.
-  /// Por defeito 'true' para maximizar a produtividade inicial.
+  /// Get the continuous scanning preference.
+  /// Defaults to true to maximize productivity.
   Future<bool> getContinuousScan() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_continuousScanKey) ?? true;

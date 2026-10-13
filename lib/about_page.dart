@@ -33,7 +33,7 @@ class _AboutPageState extends State<AboutPage> {
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível abrir o link: $url')),
+        SnackBar(content: Text('Could not open link: $url')),
       );
     }
   }
@@ -44,50 +44,50 @@ class _AboutPageState extends State<AboutPage> {
     const githubUrl = 'https://github.com/marotoweb/cajuscan_app';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sobre o CajuScan')),
+      appBar: AppBar(title: const Text('About CajuScan')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Secção do Autor
+          // Author section
           ListTile(
             leading: const Icon(Icons.person),
-            title: const Text('Desenvolvido por'),
+            title: const Text('Developed by'),
             subtitle: const Text(authorName),
           ),
-          // Secção do GitHub
+          // GitHub section
           ListTile(
             leading: const Icon(Icons.code),
-            title: const Text('Código fonte (GitHub)'),
+            title: const Text('Source code (GitHub)'),
             subtitle: const Text(githubUrl),
             onTap: () => _launchURL(githubUrl),
             trailing: const Icon(Icons.open_in_new),
           ),
           const Divider(),
-          // Secção dos Termos de Utilização
+          // Terms of use section
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
-              'Termos de utilização e isenção de responsabilidade',
+              'Terms of use and disclaimer',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
           const Text(
-            'Esta aplicação é fornecida "COMO ESTÁ", sem garantias de qualquer tipo, expressas ou implícitas. '
-            'Ao utilizar o CajuScan, concorda que o faz por sua conta e risco.\n'
-            'Apesar do autor desenvolver este aplicativo para seu uso pessoal, decidiu partilhar o mesmo sem qualquer custo.\n'
-            'O autor não se responsabiliza por qualquer eventual mau funcionamento, perda de dados, erros de registo, '
-            'ou quaisquer outros danos diretos ou indiretos que possam surgir do uso ou da incapacidade de uso desta aplicação.'
-            'É da exclusiva responsabilidade do utilizador verificar a correção dos dados enviados para a aplicação Cashew e garantir a sua conformidade.\n'
-            'Ao utilizar esta aplicação, concorda em isentar o autor de qualquer responsabilidade relacionada com o uso do CajuScan.'
-            'Se não concorda com estes termos, por favor, não utilize esta aplicação.\n\n'
-            'Obrigado por utilizar o CajuScan!',
+            'This app is provided "AS IS", without warranties of any kind, express or implied. '
+            'By using CajuScan, you agree that you do so at your own risk.\n'
+            'The author originally developed this app for personal use and decided to share it free of charge.\n'
+            'The author is not responsible for malfunctions, data loss, recording errors, or any other direct or indirect '
+            'damages resulting from the use of, or inability to use, this app. '
+            'You are solely responsible for verifying the accuracy and compliance of data sent to Cashew.\n'
+            'By using this app, you agree to hold the author harmless from any liability related to CajuScan. '
+            'If you do not agree to these terms, please do not use this app.\n\n'
+            'Thank you for using CajuScan!',
             textAlign: TextAlign.justify,
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 20),
           Center(
             child: Text(
-              'Versão: $_appVersion',
+              'Version: $_appVersion',
               style: const TextStyle(color: Colors.black),
             ),
           ),

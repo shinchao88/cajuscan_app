@@ -1,5 +1,5 @@
-- Added option to attach fiscal metadata to Cashew transaction notes.
-- Support for manual date/time editing with 24-hour regional selectors.
-- Backup exports now include dynamic timestamps in filenames.
-- Fixed merchant saving/binding validation by NIF.
-- UI improvements in the confirmation
+- Added an option to include tax metadata in Cashew transaction notes.
+- Added manual invoice date and time editing with a locale-aware time picker.
+- Backup exports now use timestamped filenames.
+- Fixed merchant profile matching by tax ID.
+- Improved the confirmation screen.

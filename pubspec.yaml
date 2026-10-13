@@ -1,5 +1,5 @@
 name: cajuscan_app
-description: "Digitalização de código QR e importação de despesa para Cashew das faturas de portugal."
+description: "Scan invoice QR codes and import expenses into Cashew from Portuguese invoices."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -97,9 +97,9 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 flutter_launcher_icons:
-  android: "launcher_icon" # Nome do ficheiro de ícone para Android
+  android: "launcher_icon" # Android icon filename.
   ios: true
-  image_path: "assets/icon/icon.png" # Ícone principal (para iOS e Androids antigos)
+  image_path: "assets/icon/icon.png" # Main icon for iOS and older Android versions.
   
-  adaptive_icon_background: "#336699" # Cor de fundo em hexadecimal (ex: branco)
-  adaptive_icon_foreground: "assets/icon/icon_foreground.png" # O seu logótipo com fundo transparente
+  adaptive_icon_background: "#336699" # Background color in hexadecimal (e.g. white).
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png" # Logo with a transparent background.

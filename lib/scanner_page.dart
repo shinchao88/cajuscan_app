@@ -3,7 +3,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
-import 'fatura_model.dart';
+import 'invoice_model.dart';
 import 'confirmation_page.dart';
 import 'settings_service.dart';
 import 'category_management_service.dart';
@@ -31,13 +31,13 @@ class _ScannerPageState extends State<ScannerPage>
   @override
   void initState() {
     super.initState();
-    // Configuração da linha vermelha animada
+    // Configure the animated red line.
     _animationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
 
-    // Ajustamos o Tween para 0.01 a 0.95 para a barra não "bater" nos cantos e causar o piscar
+    // Keep the scan line away from the edges to prevent flickering.
     _animation = Tween<double>(begin: 0, end: 0.99).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
@@ -54,16 +54,16 @@ class _ScannerPageState extends State<ScannerPage>
 
     final String code = result.text!;
 
-    // Validação de faturas portuguesas (ATCUD/QR)
+    // Validate Portuguese invoices (ATCUD/QR).
     if (code.contains("A:") && code.contains("F:")) {
       setState(() {
         _isProcessing = true;
       });
 
       try {
-        final fatura = Fatura.fromQrCodeString(code);
+        final invoice = Invoice.fromQrCodeString(code);
 
-        // Verifica a preferência do utilizador
+        // Check the user's preference.
         final isContinuous = await _settingsService.getContinuousScan();
         final categories = await _categoryService.getCategories();
         final accounts = await _accountService.getAccounts();
@@ -71,11 +71,11 @@ class _ScannerPageState extends State<ScannerPage>
         if (!mounted) return;
 
         if (isContinuous) {
-          // Empilha a página e reseta o scanner ao voltar
+          // Keep the scanner on the stack so it can reset when returning.
           await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => ConfirmationPage(
-                fatura: fatura,
+                invoice: invoice,
                 categories: categories,
                 accounts: accounts,
               ),
@@ -86,23 +86,23 @@ class _ScannerPageState extends State<ScannerPage>
             setState(() => _isProcessing = false);
           }
         } else {
-          // Substitui o scanner pela confirmação.
-          // Ao sair da confirmação, volta para a Home.
+          // Replace the scanner with the confirmation page.
+          // Returning from confirmation takes the user back home.
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => ConfirmationPage(
-                fatura: fatura,
-                categories: categories, // Parâmetro adicionado
-                accounts: accounts, // Parâmetro adicionado
+                invoice: invoice,
+                categories: categories,
+                accounts: accounts,
               ),
             ),
           );
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('Erro ao ler QR: $e');
+          debugPrint('Error reading QR code: $e');
         }
-        // Em caso de erro, aguarda 2 segundos e permite nova tentativa
+        // Wait two seconds before allowing another attempt after an error.
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) setState(() => _isProcessing = false);
       }
@@ -114,10 +114,10 @@ class _ScannerPageState extends State<ScannerPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Define o tamanho da janela de scan (75% da largura)
+    // Set the scan window size to 75% of the screen width.
     final scanWindowSize = screenWidth * 0.75;
 
-    // Retângulo centralizado para o Overlay e para o Crop do motor de scan
+    // Center the scan window for the overlay and scanner crop.
     final scanWindowRect = Rect.fromCenter(
       center: Offset(screenWidth / 2, screenHeight / 2),
       width: scanWindowSize,
@@ -127,7 +127,7 @@ class _ScannerPageState extends State<ScannerPage>
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Aponte para o código QR'),
+        title: const Text('Point at the QR code'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -141,29 +141,29 @@ class _ScannerPageState extends State<ScannerPage>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Camada 1: O Scanner (ZXing)
+          // Layer 1: ZXing scanner.
           ReaderWidget(
             onScan: _handleDetection,
 
-            // Desativamos todas as decorações nativas
+            // Disable the native decorations.
             showFlashlight: false,
             showGallery: false,
             showToggleCamera: false,
 
-            // Desativar o zoom traz uma melhoria de performance marginal
+            // Disabling zoom provides a small performance improvement.
             allowPinchZoom: false,
 
-            // Define a área de processamento para 75% da largura/altura disponível
+            // Process 75% of the available width and height.
             cropPercent: 0.75,
 
-            // Desactivar janela default do ZXing, usamos a nossa camada
+            // Use our own overlay instead of ZXing's default scan window.
             showScannerOverlay: false,
 
-            // Delay entre scans para evitar múltiplas leituras rápidas
+            // Add a delay between scans to prevent duplicate reads.
             scanDelay: const Duration(milliseconds: 500),
           ),
 
-          // Camada 2: Overlay (Fundo escurecido com recorte)
+          // Layer 2: overlay with a darkened background and a transparent cutout.
           RepaintBoundary(
             child: CustomPaint(painter: OverlayPainter(scanWindowRect)),
           ),
@@ -175,13 +175,13 @@ class _ScannerPageState extends State<ScannerPage>
               width: scanWindowSize,
               child: Stack(
                 children: [
-                  // As bordas com ângulo arredondado invertido
+                  // Draw the inverted rounded corners.
                   Positioned.fill(
                     child: RepaintBoundary(
                       child: CustomPaint(painter: ScannerBorderPainter()),
                     ),
                   ),
-                  // Linha Vermelha Animada
+                  // Animated red line.
                   AnimatedBuilder(
                     animation: _animation,
                     builder: (context, child) {
@@ -210,13 +210,13 @@ class _ScannerPageState extends State<ScannerPage>
             ),
           ),
 
-          // Camada 4: Texto de ajuda
+          // Layer 4: Instructions.
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 80.0),
               child: Text(
-                'Coloque o código QR dentro da área visível',
+                'Place the QR code inside the visible area',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 15,
@@ -226,7 +226,7 @@ class _ScannerPageState extends State<ScannerPage>
             ),
           ),
 
-          // Camada 5: Indicador de processamento
+          // Layer 5: processing indicator.
           if (_isProcessing)
             Container(
               color: Colors.black54,
@@ -240,7 +240,7 @@ class _ScannerPageState extends State<ScannerPage>
   }
 }
 
-// Painter para desenhar a sobreposição com um buraco
+// Paint the overlay with a transparent cutout.
 class OverlayPainter extends CustomPainter {
   final Rect scanWindow;
   OverlayPainter(this.scanWindow);
@@ -250,18 +250,18 @@ class OverlayPainter extends CustomPainter {
     final backgroundPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.5);
 
-    // 1. Criamos o fundo total
+    // 1. Create the full background.
     final backgroundPath = Path()
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    // 2. Criamos o caminho do "buraco" com cantos invertidos
+    // 2. Create the cutout path with inverted corners.
     const radius = 16.0;
     final holePath = Path();
 
-    // Desenho manual do contorno do buraco para permitir arcos invertidos
+    // Draw the cutout outline manually to support inverted arcs.
     holePath.moveTo(scanWindow.left, scanWindow.top + radius);
 
-    // Superior Esquerdo (Invertido)
+    // Top left (inverted).
     holePath.arcToPoint(
       Offset(scanWindow.left + radius, scanWindow.top),
       radius: const Radius.circular(radius),
@@ -269,7 +269,7 @@ class OverlayPainter extends CustomPainter {
     );
     holePath.lineTo(scanWindow.right - radius, scanWindow.top);
 
-    // Superior Direito (Invertido)
+    // Top right (inverted).
     holePath.arcToPoint(
       Offset(scanWindow.right, scanWindow.top + radius),
       radius: const Radius.circular(radius),
@@ -277,7 +277,7 @@ class OverlayPainter extends CustomPainter {
     );
     holePath.lineTo(scanWindow.right, scanWindow.bottom - radius);
 
-    // Inferior Direito (Invertido)
+    // Bottom right (inverted).
     holePath.arcToPoint(
       Offset(scanWindow.right - radius, scanWindow.bottom),
       radius: const Radius.circular(radius),
@@ -285,7 +285,7 @@ class OverlayPainter extends CustomPainter {
     );
     holePath.lineTo(scanWindow.left + radius, scanWindow.bottom);
 
-    // Inferior Esquerdo (Invertido)
+    // Bottom left (inverted).
     holePath.arcToPoint(
       Offset(scanWindow.left, scanWindow.bottom - radius),
       radius: const Radius.circular(radius),
@@ -293,7 +293,7 @@ class OverlayPainter extends CustomPainter {
     );
     holePath.close();
 
-    // 3. Subtraímos o buraco do fundo
+    // 3. Subtract the cutout from the background.
     canvas.drawPath(
       Path.combine(PathOperation.difference, backgroundPath, holePath),
       backgroundPaint,
@@ -305,7 +305,7 @@ class OverlayPainter extends CustomPainter {
       oldDelegate.scanWindow != scanWindow;
 }
 
-// --- DESENHO DOS CANTOS BRANCOS DA MOLDURA ---
+// --- Draw the white frame corners ---
 class ScannerBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -316,21 +316,21 @@ class ScannerBorderPainter extends CustomPainter {
       ..strokeCap = StrokeCap.square;
 
     const cornerLength = 30.0;
-    const radius = 16.0; // Raio da curva invertida
+    const radius = 16.0; // Radius of the inverted curve.
 
     final path = Path();
 
-    // Superior Esquerdo
+    // Top left.
     path.moveTo(0, cornerLength);
     path.lineTo(0, radius);
     path.arcToPoint(
       const Offset(radius, 0),
       radius: const Radius.circular(radius),
-      clockwise: false, // Curva para fora (invertida)
+      clockwise: false, // Curve outward (inverted).
     );
     path.lineTo(cornerLength, 0);
 
-    // Superior Direito
+    // Top right.
     path.moveTo(size.width - cornerLength, 0);
     path.lineTo(size.width - radius, 0);
     path.arcToPoint(
@@ -340,7 +340,7 @@ class ScannerBorderPainter extends CustomPainter {
     );
     path.lineTo(size.width, cornerLength);
 
-    // Inferior Direito
+    // Bottom right.
     path.moveTo(size.width, size.height - cornerLength);
     path.lineTo(size.width, size.height - radius);
     path.arcToPoint(
@@ -350,7 +350,7 @@ class ScannerBorderPainter extends CustomPainter {
     );
     path.lineTo(size.width - cornerLength, size.height);
 
-    // Inferior Esquerdo
+    // Bottom left.
     path.moveTo(cornerLength, size.height);
     path.lineTo(radius, size.height);
     path.arcToPoint(

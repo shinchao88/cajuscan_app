@@ -1,5 +1,5 @@
-- Importação de Ficheiros: Nova funcionalidade para ler faturas a partir de ficheiros PDF ou imagens da galeria.
-- Controlo de Scan: Adicionada opção nas Definições para alternar entre scan contínuo ou regressar à Home após cada leitura.
-- Interface Ergonómica: Botões reposicionados na parte inferior do ecrã para facilitar o uso com o polegar.
-- Melhorias na Navegação: O fluxo de saída do scanner agora respeita a preferência configurada pelo utilizador.
-- Estabilidade: Tratamento de erros otimizado para evitar leituras duplicadas ou falhas no processamento.
+- File import: Scan invoices from PDF files or gallery images.
+- Scan flow setting: Choose between continuous scanning and returning home after each scan.
+- Ergonomic interface: Moved buttons to the bottom of the screen for easier one-handed use.
+- Navigation improvements: The scanner now follows your selected scan preference.
+- Stability: Improved error handling to prevent duplicate scans and processing failures.
